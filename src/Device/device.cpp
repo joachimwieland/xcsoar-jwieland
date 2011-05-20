@@ -71,29 +71,33 @@ Copyright_License {
 //  of deadlock.  So, FlightData must never be locked after Comm.  Ever.
 //  Thankfully WinCE "critical sections" are recursive locks.
 
-static const TCHAR *const COMMPort[] = {
-  _T("COM1:"),
-  _T("COM2:"),
-  _T("COM3:"),
-  _T("COM4:"),
-  _T("COM5:"),
-  _T("COM6:"),
-  _T("COM7:"),
-  _T("COM8:"),
-  _T("COM9:"),
-  _T("COM10:"),
-  _T("COM0:"),
+#ifdef UNIX
+#define COMMPORT_FMT "%s"
+const TCHAR *const COMMPortNames[] = {
+  _T("/dev/ttyS0"), _T("/dev/ttyS1"), _T("/dev/ttyS2"), _T("/dev/ttyS3"),
+  _T("/dev/ttyS4"), _T("/dev/ttyS5"), _T("/dev/ttyS6"), _T("/dev/ttyS7"),
+  _T("/dev/ttyS8"), _T("/dev/ttyS9"), _T("/dev/ttyS10"), NULL
 };
+#endif
 
-static const unsigned dwSpeed[] = {
-  1200,
-  2400,
-  4800,
-  9600,
-  19200,
-  38400,
-  57600,
-  115200
+#ifdef ANDROID
+#define COMMPORT_FMT "%s"  // Won't be used, but make the compiler happy
+const TCHAR *const COMMPortNames[] = { NULL };
+#endif
+
+#if !defined(UNIX) && !defined(ANDROID)
+#define COMMPORT_FMT "%s:"
+const TCHAR *const COMMPortNames[] = {
+  _T("COM1"), _T("COM2"), _T("COM3"), _T("COM4"), _T("COM5"),
+  _T("COM6"), _T("COM7"), _T("COM8"), _T("COM9"), _T("COM10"),
+  _T("COM0"), NULL
+};
+#endif
+
+const TCHAR *const COMMPortSpeeds[] = {
+     _T("1200"),  _T("2400"),  _T("4800"),   _T("9600"),
+    _T("19200"), _T("38400"), _T("57600"), _T("115200"),
+    NULL
 };
 
 /**
@@ -131,7 +135,10 @@ OpenPort(const DeviceConfig &config, Port::Handler &handler)
     return NULL;
 
   case DeviceConfig::SERIAL:
-    path = COMMPort[config.port_index];
+    if (COMMPortNames[0] == NULL)
+      return NULL;
+    _sntprintf(buffer, MAX_PATH, COMMPORT_FMT, COMMPortNames[config.port_index]);
+    path = buffer;
     break;
 
   case DeviceConfig::RFCOMM:
@@ -187,10 +194,12 @@ OpenPort(const DeviceConfig &config, Port::Handler &handler)
   if (path == NULL)
     return NULL;
 
+  unsigned int dwSpeed = atoi(COMMPortSpeeds[config.speed_index]);
+
 #ifdef HAVE_POSIX
-  TTYPort *Com = new TTYPort(path, dwSpeed[config.speed_index], handler);
+  TTYPort *Com = new TTYPort(path, dwSpeed, handler);
 #else
-  SerialPort *Com = new SerialPort(path, dwSpeed[config.speed_index], handler);
+  SerialPort *Com = new SerialPort(path, dwSpeed, handler);
 #endif
   if (!Com->Open()) {
     delete Com;

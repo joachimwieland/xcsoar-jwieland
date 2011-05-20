@@ -34,6 +34,7 @@ Copyright_License {
 #include "Device/Register.hpp"
 #include "Device/List.hpp"
 #include "Device/Parser.hpp"
+#include "Device/device.hpp"
 #include "Asset.hpp"
 #include "Protection.hpp"
 #include "DevicesConfigPanel.hpp"
@@ -193,21 +194,6 @@ SetupDeviceFields(const DeviceConfig &config,
                   WndProperty *port_field, WndProperty *speed_field,
                   WndProperty *driver_field, WndButton *setup_button)
 {
-#ifndef ANDROID
-  static const TCHAR *const COMMPort[] = {
-    _T("COM1"), _T("COM2"), _T("COM3"), _T("COM4"),
-    _T("COM5"), _T("COM6"), _T("COM7"), _T("COM8"),
-    _T("COM9"), _T("COM10"), _T("COM0"),
-    NULL
-  };
-
-  static const TCHAR *const tSpeed[] = {
-    _T("1200"), _T("2400"), _T("4800"), _T("9600"),
-    _T("19200"), _T("38400"), _T("57600"), _T("115200"),
-    NULL
-  };
-#endif
-
   if (port_field != NULL) {
     DataFieldEnum *dfe = (DataFieldEnum *)port_field->GetDataField();
 
@@ -253,7 +239,7 @@ SetupDeviceFields(const DeviceConfig &config,
       }
     }
 #else
-    dfe->addEnumTexts(COMMPort);
+    dfe->addEnumTexts(COMMPortNames);
 
     switch (config.port_type) {
     case DeviceConfig::SERIAL:
@@ -277,7 +263,7 @@ SetupDeviceFields(const DeviceConfig &config,
     speed_field->hide();
 #else
     DataFieldEnum *dfe = (DataFieldEnum *)speed_field->GetDataField();
-    dfe->addEnumTexts(tSpeed);
+    dfe->addEnumTexts(COMMPortSpeeds);
 
     dfe->Set(config.speed_index);
     speed_field->RefreshDisplay();

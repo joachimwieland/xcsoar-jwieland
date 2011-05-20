@@ -46,4 +46,7 @@ void devStartup();
 void devShutdown();
 void devRestart(void);
 
+extern const TCHAR *const COMMPortNames[];
+extern const TCHAR *const COMMPortSpeeds[];
+
 #endif

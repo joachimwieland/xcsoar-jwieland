@@ -321,6 +321,7 @@ endif
 
 ifeq ($(TARGET),UNIX)
   TARGET_LDLIBS := -lstdc++ -lm
+  CXXFLAGS += -DUNIX
 endif
 
 ifeq ($(TARGET),ANDROID)
